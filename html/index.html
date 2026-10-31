@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#131810" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 fill=%27%23131810%27/%3E%3Cpath d=%27M4 17h6l3-9 5 17 4-12 2 4h4%27 fill=%27none%27 stroke=%27%23c7f67a%27 stroke-width=%272%27/%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="Браузерное фортепиано с фактурой печатной платы и мха."
+    />
+    <title>Энтропия / Bio-decay synthesizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body>
+    <svg class="filter-defs" aria-hidden="true">
+      <defs>
+        <filter id="grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency=".8"
+            numOctaves="3"
+            stitchTiles="stitch"
+          />
+        </filter>
+        <filter id="liquid-metal" x="-10%" y="-30%" width="120%" height="160%">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency=".025 .12"
+            numOctaves="2"
+            seed="8"
+            result="noise"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="noise"
+            scale="2.5"
+            result="metal"
+          />
+          <feSpecularLighting
+            in="noise"
+            surfaceScale="2"
+            specularConstant=".65"
+            specularExponent="18"
+            lighting-color="#e2ebd8"
+            result="light"
+          >
+            <feDistantLight azimuth="225" elevation="60" />
+          </feSpecularLighting>
+          <feComposite in="light" in2="metal" operator="in" result="shine" />
+          <feMerge>
+            <feMergeNode in="metal" />
+            <feMergeNode in="shine" />
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
+    <main class="instrument powered-off" id="instrument">
+      <div class="vegetation" aria-hidden="true">
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-cushion-1.png"
+          alt=""
+          style="
+            --x: -7%;
+            --y: 77%;
+            --size: 19vw;
+            --turn: -22deg;
+            --density: 0.85;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-cushion-2.png"
+          alt=""
+          style="
+            --x: 91%;
+            --y: 63%;
+            --size: 16vw;
+            --turn: 28deg;
+            --density: 0.8;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-colony-3.png"
+          alt=""
+          style="
+            --x: 94%;
+            --y: 18%;
+            --size: 11vw;
+            --turn: -30deg;
+            --density: 0.85;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-colony-2.png"
+          alt=""
+          style="--x: 43%; --y: 57%; --size: 6vw; --turn: 15deg; --density: 0.9"
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-reindeer.png"
+          alt=""
+          style="
+            --x: 28%;
+            --y: 93%;
+            --size: 19vw;
+            --turn: 174deg;
+            --density: 0.8;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-colony-1.png"
+          alt=""
+          style="
+            --x: 68%;
+            --y: 96%;
+            --size: 10vw;
+            --turn: -15deg;
+            --density: 0.9;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-cushion-2.png"
+          alt=""
+          style="
+            --x: 33%;
+            --y: -7%;
+            --size: 10vw;
+            --turn: 40deg;
+            --density: 0.75;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-colony-2.png"
+          alt=""
+          style="
+            --x: 56%;
+            --y: -4%;
+            --size: 8vw;
+            --turn: -38deg;
+            --density: 0.8;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-reindeer.png"
+          alt=""
+          style="
+            --x: 96%;
+            --y: 86%;
+            --size: 16vw;
+            --turn: -80deg;
+            --density: 0.9;
+          "
+        />
+        <img
+          class="moss-growth"
+          src="../assets/images/moss-colony-1.png"
+          alt=""
+          style="
+            --x: 37%;
+            --y: 69%;
+            --size: 7vw;
+            --turn: 18deg;
+            --density: 0.75;
+          "
+        />
+      </div>
+      <header class="monitor">
+        <div class="scope-case">
+          <div class="scope-head">
+            <span>OUTPUT / SIGNAL</span><span id="voice-count">00 VOICES</span>
+          </div>
+          <canvas
+            id="scope"
+            aria-label="Осциллограмма выходного сигнала"
+          ></canvas>
+        </div>
+        <div
+          class="channel-selector"
+          role="group"
+          aria-label="Канал для настройки"
+        >
+          <span>CHANNEL / НАСТРОЙКА</span>
+          <button
+            type="button"
+            data-channel="0"
+            aria-pressed="true"
+            title="Канал I: нижний регистр, панорама влево"
+          >
+            I · C3–B3
+          </button>
+          <button
+            type="button"
+            data-channel="1"
+            aria-pressed="false"
+            title="Канал II: верхний регистр, панорама вправо"
+          >
+            II · C4–B4
+          </button>
+        </div>
+        <div class="switch-bank">
+          <div class="switch-unit">
+            <button
+              class="rocker"
+              id="power"
+              role="switch"
+              aria-checked="false"
+              aria-label="Питание синтезатора"
+              title="Питание"
+            >
+              <span class="rocker-face"><span>I</span><span>O</span></span>
+            </button>
+          </div>
+          <div class="switch-unit">
+            <button
+              class="rocker green"
+              id="repair"
+              aria-label="Сбросить настройки"
+              title="Сбросить настройки"
+            >
+              <span class="rocker-face"
+                ><svg
+                  class="flower"
+                  viewBox="0 0 32 40"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M16 36V21m0 10c-7 0-9-5-9-5 6-1 9 5 9 5m0-3c6 0 9-5 9-5-6 0-9 5-9 5"
+                  />
+                  <path
+                    d="M16 7c-6-9-12 1-6 5-10 1-7 12 1 9-2 10 10 10 10 1 8 4 12-7 3-9 7-6-1-14-8-6Z"
+                  />
+                  <circle cx="16" cy="15" r="4" /></svg
+              ></span>
+            </button>
+          </div>
+        </div>
+      </header>
+      <section class="board" aria-label="Плата управления">
+        <svg class="circuit-links" id="circuit-links" aria-hidden="true"></svg>
+        <section class="module oscillator">
+          <h2>PIANO</h2>
+          <div class="wave-options" id="waves"></div>
+          <div class="osc-bottom">
+            <div class="control" data-knob="detune"></div>
+            <button class="hum-switch" id="hum" aria-pressed="false">
+              <i></i>50 Hz<br />BOARD HUM
+            </button>
+          </div>
+        </section>
+        <section class="module">
+          <h2>ENVELOPE</h2>
+          <div class="adsr-controls" id="adsr"></div>
+        </section>
+        <section class="module">
+          <h2>EFFECTS</h2>
+          <div class="rot-controls">
+            <div class="control" data-knob="bits"></div>
+            <div class="control" data-knob="distortion"></div>
+            <div class="control" data-knob="cutoff"></div>
+            <div class="control" data-knob="noise"></div>
+          </div>
+        </section>
+        <section class="module">
+          <h2>SPACE</h2>
+          <div class="space-controls">
+            <div class="control" data-knob="reverb"></div>
+            <div class="control" data-knob="feedback"></div>
+          </div>
+        </section>
+      </section>
+      <section class="keyboard-section" aria-label="Клавиатура C3–B4">
+        <div class="keyboard-meta">
+          <span>I: C3–B3 / II: C4–B4 / Z–M + Q–U</span>
+        </div>
+        <div class="keyboard"><div class="keys" id="keys"></div></div>
+      </section>
+      <div class="error" id="error" role="alert"></div>
+    </main>
+    <div class="grain" aria-hidden="true"></div>
+    <script src="../assets/audio/piano/samples.js"></script>
+    <script src="../js/piano.js"></script>
+    <script src="../js/app.js"></script>
+  </body>
+</html>
